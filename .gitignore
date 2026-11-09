@@ -1,0 +1,9 @@
+data/
+__pycache__/
+*.pyc
+*.pkl
+*.parquet
+paper/figs/
+paper/tables/
+paper/*.pdf
+.DS_Store

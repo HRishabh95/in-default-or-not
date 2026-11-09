@@ -1,0 +1,660 @@
+% In Default or Not? SSRN working paper source.
+% Build: ./build.sh   (figures/tables from figs.py; Tectonic in conda env "tectonic")
+% Every number traces to data/interim/late_flags/outcome/FINAL.json (src/late_flags/final.py); see ../NUMBERS_AUDIT.md.
+% Legal and form-scope statements trace to src/late_flags/CONTRACTS_AND_SCOPE.md.
+\documentclass[11pt]{article}
+\usepackage[letterpaper,margin=1.05in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{newpxtext,newpxmath}
+\usepackage{microtype}
+\usepackage{setspace}\setstretch{1.12}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,threeparttable}
+\usepackage{float}
+\usepackage[section]{placeins}
+\usepackage{enumitem}
+\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\usepackage{xcolor}
+\usepackage[round,authoryear]{natbib}
+\usepackage[colorlinks=true,linkcolor=black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage{xurl}
+\newcommand{\doi}[1]{\href{https://doi.org/#1}{doi:#1}}
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\setlist{itemsep=2pt,topsep=4pt}
+\graphicspath{{figs/}}
+\renewcommand{\topfraction}{0.85}\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.12}\renewcommand{\floatpagefraction}{0.75}
+\makeatletter\newcommand{\tabinput}[1]{\@@input #1 }\makeatother
+
+\title{\textbf{In Default or Not?}\\[2pt]
+\Large How Funds Report Bonds of Bankrupt Issuers in SEC Form N-PORT}
+\author{Rishabh Gyanendra Upadhyay\thanks{Inception42. E-mail:
+\href{mailto:uhrishabh@gmail.com}{uhrishabh@gmail.com}.}\\[2pt] \normalsize Inception42}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent Form N-PORT asks each fund that files it whether each debt security it holds is ``currently in
+default'', and the SEC chose to leave the meaning of default to each fund's own methodology. We measure
+how far those methodologies diverge for debt of issuers that have filed for bankruptcy. The sample is
+57 Chapter~11 and Chapter~7 cases of SEC-reporting issuers from 2019 to 2026, each verified from the
+issuer's Form 8-K, with 73\% of holdings in 2020 cases. First, among bankruptcy-linked bond-dates
+(the same bond on the same report date) held by funds of at least two different advisers, the advisers'
+fund families give opposite answers in 141 of 305 (46.2\%; 95\% interval 35.5\% to 56.0\%, clustered
+over the 50 cases involved). Second, at each fund's first report after the petition became public and before any identified plan
+effective date, 18.8\% of 3,783 bond holdings are reported as not in default (95\% interval 13.7\% to
+23.0\%, clustered by case). Prepetition loans, whose coverage by the item the SEC has not specified,
+show 67.2\%; pooled, 24.9\%. In the governing documents of the five largest cases, the petition is an
+event of default that accelerates the debt automatically, although that term is not universal.
+Holders that answer differently report nearly identical prices, and a typical position is 0.03\% of
+fund net assets, so the finding concerns the reliability of a status field used for screening and
+aggregation, not misvaluation or investor loss. These are not error rates: the form permits fund
+methodologies to differ. A pre-registered run gave 30.3\%; a later source-based audit removed
+securities of unrelated companies and non-filing affiliates, and the corrected estimates are post hoc.
+
+\medskip\noindent\textbf{Keywords:} Form N-PORT, default status, bankruptcy, regulatory reporting,
+data quality, mutual funds, ETFs.\\
+\textbf{JEL classification:} G23, G28, G33.
+\end{abstract}
+
+\newpage
+\setcounter{page}{1}
+
+%=====================================================================
+\section{Introduction}
+
+Item C.9 of Form N-PORT asks a fund, for each debt security it holds, whether the security is
+``currently in default'' \citep{sec_nport_form}. The answers are public for the third month of each
+fiscal quarter. They feed screens that count defaulted exposure across funds, data products sold to
+risk teams, and research panels built from N-PORT \citep{cavani2025}. When the SEC adopted the form, a
+commenter warned that the item requires ``a subjective legal analysis on an instrument-by-instrument
+basis, on which conclusions among funds may vary''. The Commission declined to define default and
+chose ``to allow funds to continue to use their own methodology'' \citep{sec_2016_release}. The form
+also lets funds rely on ``their own internal methodologies and the conventions of their service
+providers'', provided they are consistently applied \citep{sec_nport_form}.
+
+This note measures how much those methodologies diverge in the case where divergence is easiest to
+see: debt of an issuer that has filed a bankruptcy petition. We make two comparisons. The first is
+internal and needs no view on what default means: for the same security on the same report date, do
+different fund families give the same answer? The second is external: how often is debt of a verified
+petitioner reported as not in default? A petition is a well-dated, public event, and in the governing
+documents of the five largest cases in our sample it is an event of default that accelerates the debt
+automatically (Section~\ref{sec:item}). It is not a legal finding about any fund's report.
+
+The SEC staff has raised the question in comment letters. In 2020 Goldman Sachs Trust told the staff
+that ``the respective Form N-PORT filings did not denote all of such securities as being in default''
+\citep{corr_gs2020}; in 2021 the staff asked RiverNorth Specialty Finance to report past-due loans as in
+default or in arrears \citep{corr_rivernorth2022}. Those letters concern single registrants. We measure
+prevalence, persistence and whether reported prices differ.
+
+The findings are descriptive. Fund families disagree on 46\% of the bond-dates that more than one
+family holds (95\% interval 35.5\% to 56.0\%; 39.8\% if each case is weighted equally). Around a fifth of bond holdings (18.8\%) and two thirds of loan holdings are reported as not in
+default at the first post-petition report. Holders that disagree on the label report nearly the same
+prices. The study was pre-registered and run once on 60 cases, which gave 30.3\%; the corrected
+sample removes securities that the frozen rules had wrongly linked to two cases, and we report it as a
+post-hoc audit (Section~\ref{sec:record}).
+
+%=====================================================================
+\section{The form item, the contracts and related work}\label{sec:item}
+
+\paragraph{The item.} Item C.9 is headed ``For debt securities, also provide''; C.9.c asks ``Currently
+in default?'' and C.9.d whether ``any interest payments are in arrears or have any coupon payments been
+legally deferred by the issuer'' \citep{sec_nport_form}. The form lists ``debt'' and ``loan'' as separate
+asset types in Item C.4 and does not say whether loans fall under C.9. We found no form instruction,
+staff answer or schema rule on the point: the XML schema allows the C.9 fields on any holding, and
+filers populate them for loans. We therefore report loans separately and treat them as exploratory.
+
+\paragraph{The contracts.} We read the governing indenture of a note and, where funds held one, the
+credit agreement of a term loan in each of the five largest cases (Table~\ref{tab:contracts}), and in
+the Endo case also the notes funds held most. In all of them a voluntary petition by the obligor, or
+for Endo by the parent, is an event of default and acceleration is automatic (``without any declaration
+or other act'', ``shall automatically become due and payable''). Each instrument matches a CUSIP held in
+the sample, and each obligor was itself a debtor in the case, except Endo Luxembourg Finance Company I,
+which we could not find named on EDGAR; its instruments accelerate on the parent's filing, which
+occurred. Appendix Table~\ref{tab:sources} gives the filings, provisions and debtor sources. In all
+five cases the issuer also stated in an 8-K that the filing was an event of default that accelerated
+its debt. The term is
+not universal: in Valley National Bancorp's 2032 subordinated notes a voluntary filing is an event of
+default but acceleration requires a declaration by the trustee or 25\% of holders \citep{valley2022}. We
+did not read the documents of every security in the sample. The automatic stay of 11 U.S.C.~\S362(a)
+restrains enforcement and collection against the debtor; it does not cure an event of default
+\citep{usc362, uscourts_ch11}.
+
+\paragraph{Pending amendments.} The Commission's February 2026 proposal to amend Form N-PORT would
+remove the delta of convertible bonds from Item C.9, noting that ``funds may use different
+methodologies for calculating delta for convertible bonds, which adds to variability in the reported
+information and reduces its utility'' \citep{sec_2026_proposal}. It leaves the default and arrears items
+unchanged.
+
+\begin{table}[!htb]
+\centering\small
+\caption{Bankruptcy terms in governing documents of the five largest cases.}\label{tab:contracts}
+\begin{tabularx}{\textwidth}{@{}l X l@{}}
+\toprule
+Case & Document & Petition accelerates \\
+\midrule
+Frontier Communications & 8.000\% first-lien notes due 2027, indenture of 15 March 2019; term B-1 loans, 2017 credit agreement & automatically \\
+Intelsat Jackson & 8.500\% notes due 2024, indenture of 19 September 2018; term loan credit agreement (2013 conformed text) & automatically \\
+Chesapeake Energy & 11.5\% second-lien notes due 2025 and FLLO term loan agreement, both 19 December 2019 & automatically \\
+Endo International & 6.125\% notes due 2029 and 2021 term loans, 25 March 2021; Par Pharmaceutical 7.500\% notes due 2027, 2019 (filing by the parent) & automatically \\
+Whiting Petroleum & 6.625\% notes due 2026, fifth supplemental indenture of 27 December 2017 & automatically \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{SEC correspondence.} A full-text search of staff correspondence returns several dozen letters
+that mention N-PORT together with defaulted securities. Table~\ref{tab:corr} lists five that we read and
+that discuss the default or arrears fields directly. Two acknowledge omitted flags, one ends with the
+registrant defending its answer, and two concern the opposite direction.
+
+\begin{table}[!htb]
+\centering\small
+\caption{SEC staff correspondence on N-PORT default and arrears fields. Dates are the dates of the
+registrants' letters; EDGAR may have released them later.}\label{tab:corr}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+Date & Registrant & What it says \\
+\midrule
+2020-08-28 & Goldman Sachs Trust & Defaults footnoted in financial statements; N-PORT ``did not denote all of such securities as being in default''; to be corrected. \\
+2021-02-26 & OFS Credit Company & Staff asks why no defaults are reported; registrant: none in default or arrears. \\
+2021-10-13 & RiverNorth Specialty Finance & Past-due loans not reported in default or arrears; to be reported in future filings. \\
+2020-09-24 & Vertical Capital Income Fund & Loans flagged in default; staff asks for the non-income-producing symbol. \\
+2025-09-19 & Yieldstreet Alternative Income Fund & Three securities in default on N-PORT, one marked non-income producing. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Related work.} A security-level default flag is already supplied as reference data: ICE's
+N-PORT reporting service lists a debt default flag and an interest-in-arrears and payment-in-kind flag
+\citep{ice_nport}, and Bloomberg offers a comparable field. These are inputs to reporting, and their
+existence means that answers within a fund family may come from a shared feed. Comparing the same
+security across funds on the same date is established for prices: \citet{cici2011} document dispersion
+in month-end valuations of identical corporate bonds across mutual funds, \citet{morningstar2021}
+repeat the comparison with N-PORT, and Empirasign publishes N-PORT valuation outliers
+\citep{empirasign}. The closest population is in \citet{manoel2026}, who matches the bonds of public
+Chapter~11 debtors (2008 to 2023) to the mutual funds holding them at filing, from N-PORT or N-CSR
+disclosures and CRSP holdings, and asks whether ties between those funds and the debtor's financial
+adviser affect TRACE bond returns around the filing; it does not use the N-PORT default item. In a bounded search we did not find a study that measures how fund
+answers to the default item differ for the same security, or how they compare with bankruptcy
+petitions; we do not claim that none exists.
+
+%=====================================================================
+\section{Data and design}\label{sec:data}
+
+\paragraph{Holdings.} We use every SEC Form N-PORT quarterly data set from 2019Q4 to 2026Q3
+\citep{sec_nport_data}. A data set holds the filings disseminated in a calendar quarter, with mixed report
+dates and with amendments that can supersede filings in earlier data sets. For each fund (series) and
+report date we keep the latest version across all data sets. A holding is a fund, security and report
+date; a fund with several lots of one security counts as reporting default if any lot does.
+
+\paragraph{Events.} We search EDGAR full text for 8-Ks filed from July 2019 to October 2026 that tag Item
+1.03 (bankruptcy or receivership) and mention Chapter~11 or Chapter~7. A case is the first such 8-K of a
+registrant. We keep a case only if its Item 1.03 text states that petitions were filed and gives a
+petition date between 30 days before and one day after the 8-K filing date, which removes confirmation
+and exit filings of earlier cases and spurious tags. The 8-K filing date is when the petition became
+public on EDGAR.
+
+\paragraph{Securities.} We link debtor securities by issuer name, legal entity identifier and the
+six-character CUSIP issuer prefix, restricted to corporate debt and loans held by some fund on or before
+the petition. We exclude debtor-in-possession loans, securitisations, pass-through trusts and
+securities that matured before the petition. A post-hoc audit (Section~\ref{sec:record}) checked, security
+by security, that the issuer filed in the case.
+
+\paragraph{Measurement.} For each case, security and fund we take the fund's first report date after the
+8-K filing date and within 120 days of the petition, before the case's next Item 1.03 8-K and before the
+plan effective date where one is identified. Effective dates were found for 39 of the 57 cases; for the
+other 18 cases (1,438 holdings) the window rests on the 120-day limit and the next Item 1.03 8-K, and we
+report the known-end-date subsample separately. The median gap from the 8-K filing to the report is 44
+days. Intervals are 95\% bootstrap intervals that resample cases (2,000 draws).
+
+\paragraph{Scope.} The sample is a set of public-issuer bankruptcies whose debt registered funds held.
+It is concentrated in the 2020 cycle (3,174 of 4,331 holdings) and in a few large cases, and it excludes
+private-company bankruptcies, which account for much of the leveraged loan market. It is not a
+representative sample of corporate defaults.
+
+\begin{table}[!htb]
+\centering\small
+\caption{Sample construction.}\label{tab:flow}
+\begin{tabularx}{\textwidth}{@{}X r r@{}}
+\toprule
+ & Cases & Holdings \\
+\midrule
+\tabinput{tables/flow.tex}
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%=====================================================================
+\section{Results}
+
+\subsection{Same security, same date}
+
+Table~\ref{tab:cross} compares fund families holding the same security on the same report date. A
+fund family is the adviser named in the fund's most recent Form N-CEN (Part C), or the N-PORT registrant
+when none is named. For each security-date in the analysis sample we take every fund that reports the
+security on that date, not only funds for which it is the first post-petition report. A family's answer
+is ``in default'' if all its funds report default, ``not in default'' if none do, and mixed otherwise.
+The classes in Table~\ref{tab:cross} are mutually exclusive and add to the total; the memo row
+overlaps them.
+
+Of the 305 bond-dates held by at least two families, families give opposite answers in 141 (46.2\%,
+95\% interval 35.5\% to 56.0\%, clustered by case). In 157 every family reports default, in six none
+does, and in one no family contradicts another but one family's own funds disagree. The 305 bond-dates
+come from 50 cases and the 141 from 32. Weighting each case equally gives 39.8\% (28.8\% to 50.3\%);
+dropping any one case gives between 43.3\% and 49.0\%, and dropping the five cases with the most
+bond-dates gives 46.8\%. The share is 50.0\% in bond-dates of 2020 cases and 39.0\% (41 of 105) in the others. For
+loans, families disagree in 32 of 52 loan-dates. Across bonds and loans, 956 of the 1,079 holdings
+reported as not in default sit in a security-date where another family reports default.
+
+Figure~\ref{fig:cross}b shows one case, chosen as the bond-date with the most families on the smaller
+side. On 30 June 2020, eleven weeks after Frontier Communications filed, 46 fund families reported its
+8.000\% first-lien notes due 2027 (CUSIP 35906ABC1): 20 families (43 funds) reported them in default
+and 26 families (45 funds) not in default. The median prices were 101.7 and 101.6. The three largest
+holdings on each side are in N-PORT filings 0001145549-20-050750, 0001752724-20-163403 and
+0001752724-20-174015 (in default) and 0001752724-20-174964, 0001752724-20-178862 and
+0000810893-20-005528 (not in default). The indenture of these notes makes a voluntary petition an
+event of default with automatic acceleration (Table~\ref{tab:contracts}).
+
+\begin{table}[!htb]
+\centering\small
+\caption{Security-dates (same CUSIP, same report date) in the analysis sample, by the answers of
+different fund families. Post hoc. Intervals: 95\%, bootstrap over cases.}\label{tab:cross}
+\begin{tabularx}{\textwidth}{@{}X r r r@{}}
+\toprule
+ & Bonds & Loans & All \\
+\midrule
+\tabinput{tables/cross_family.tex}
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[!htb]
+\centering
+\includegraphics{fig1_cross.pdf}
+\caption{(a) Share of fund families reporting the bond in default, for each bond-date held by at least
+two families (a family whose funds disagree counts as one half). (b) The bond-date with the most
+families on the smaller side.}
+\label{fig:cross}
+\end{figure}
+
+This comparison does not depend on how default is read: different families answer the same question
+about the same instrument on the same date differently. It does not tell us which answer is right, and
+families are not fully independent sources, since several may take the field from the same data
+vendor.
+
+\subsection{Comparison with the petition}
+
+Of 3,783 bond holdings, 18.8\% are reported as not in default at the first report after the petition
+became public (Table~\ref{tab:est}). For prepetition loans the share is 67.2\%
+(548 holdings in 21 cases); because the SEC has not said whether loans fall under the item, we do not
+read the loan figure as comparable with the bond figure. Pooled, 1,079 of 4,331 holdings (24.9\%) are
+reported as not in default; weighting each case equally gives 27.2\%, and by reported value 34.7\%
+(\$2.82 billion of \$8.12 billion). Restricting to the 39 cases with an identified effective date gives
+25.8\%. The holdings involve 847 funds in 285 fund families.
+
+\begin{table}[!htb]
+\centering\small
+\caption{Share of holdings reported as not in default at the first report after the petition.
+Intervals: 95\%, bootstrap over cases.}\label{tab:est}
+\begin{tabularx}{\textwidth}{@{}X r c r r@{}}
+\toprule
+ & Share & Interval & Holdings & Cases \\
+\midrule
+\tabinput{tables/estimates.tex}
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Distribution across cases, fund families and years}
+
+The share varies widely by case (Figure~\ref{fig:dist}a). Among the 47 cases with at least five
+holdings, the quartiles are 9.7\%, 22.2\% and 40.4\%. Across all 57 cases, every holding is flagged in
+14 and none is in two. The five largest cases account for 61\% of unflagged holdings; dropping any one
+case leaves between 22.6\% and 26.0\%, and dropping the five largest leaves 21.3\%.
+
+Of the 95 fund families with at least ten holdings, 26 report every holding as in default and none
+reports none; the median family leaves 12.5\% unflagged (Figure~\ref{fig:dist}b). The five largest
+families hold 45\% of the unflagged holdings, and dropping them leaves 22.0\%. These family patterns are
+descriptive: they partly reflect which issuers each family holds. Within the security-dates where
+families disagree, of the 117 families that appear in at least five, 83 give each answer at least once,
+30 always report default and 4 never do. Most families are therefore not applying a single fixed
+convention. Table~\ref{tab:years} gives the estimate by petition year.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics{fig2_distribution.pdf}
+\caption{(a) Pooled share reported as not in default in each bankruptcy case. (b) The same share for
+fund families with at least ten holdings in the sample.}
+\label{fig:dist}
+\end{figure}
+
+\begin{table}[!htb]
+\centering\small
+\caption{By petition year (pooled bonds and loans).}\label{tab:years}
+\begin{tabular}{@{}l r r r@{}}
+\toprule
+Year & Cases & Holdings & Not in default \\
+\midrule
+\tabinput{tables/years.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What happened next}
+
+We follow each unflagged holding through the fund's later reports until one year after the petition,
+the case's next Item 1.03 8-K or an identified effective date, whichever comes first
+(Figure~\ref{fig:pers}). Of the 1,079 holdings, 428 have no later report in that window, so their
+persistence is not observed, and 156 leave the portfolio (141 sold or exchanged into securities we
+cannot link, 13 exchanged into linked securities, 2 in funds that stopped filing). That leaves 495
+holdings observed again while still held. At the next report, 229 (46\%) are reported as in default and
+266 (54\%) are not; 163 remain unflagged across at least two later reports. By the end of the window,
+nine more are flagged at a later report (238 in all), so 257 are still unflagged when last observed.
+When a flag appears, the median time from the 8-K filing is 109 days.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics{fig3_persistence.pdf}
+\caption{Status of the unflagged holdings at the end of the observation window (the earliest of one
+year after the petition, the next Item 1.03 8-K and an identified effective date). ``Flagged at a later
+report'' counts 229 holdings flagged at the next report and nine flagged afterwards.}
+\label{fig:pers}
+\end{figure}
+
+\subsection{Prices}
+
+In the 168 security-dates where some holders report default and others do not, the median prices of
+the two groups differ by a median of 0.0 points (interquartile range $-0.19$ to $+0.21$); in 87.5\% of
+these cells the two medians are within one point (Figure~\ref{fig:prices}). The price comparison groups
+holders rather than families, so its 168 security-dates are the 173 of class A in
+Table~\ref{tab:cross} less six bond-dates in which no holder reporting ``not in default'' gives a usable
+price (in four they report zero principal and zero value, in two a quantity in units rather than
+principal amount), plus the one class-D bond-date, where funds of a single family disagree. The median price in these
+cells is about 35 per 100 of face value. Only one unflagged holding carries forward its own
+pre-petition price exactly. Holders that answer the default question differently report nearly the
+same values. This does not validate either group's marks, and it does not show which label is right.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics{fig4_prices.pdf}
+\caption{Median price per 100 of face value in the 168 security-dates where some holders report the
+security in default and others do not.}
+\label{fig:prices}
+\end{figure}
+
+\subsection{Arrears and amendments}
+
+Eleven unflagged holdings report interest in arrears; 1,127 flagged holdings do. Arrears or legally
+deferred interest need not be a current contractual default, so we report this without interpretation.
+Of 89 holdings whose report was amended, none changed its default answer.
+
+%=====================================================================
+\section{Interpretation, relevance and limitations}\label{sec:interp}
+
+\paragraph{What the numbers are not.} They are not error rates. The SEC left default to fund
+methodology, so a fund can report ``not in default'' under a methodology that, for example, counts only
+missed payments, or treats debt as current while adequate-protection interest is paid, or follows a
+contract that does not accelerate automatically. We cannot observe which methodology a fund used. Different methodologies,
+shared data vendors, operational differences and plain mistakes could all contribute, and the data do
+not identify the reason for any particular disagreement. What we measure is how often reported status departs from a verified petition, and how often funds answering
+the same question about the same security disagree.
+
+\paragraph{Why it matters.} In the security-dates where holders disagree, the median reported price is
+about 35 per 100 of face value and the two groups' prices agree, so these securities were already
+heavily discounted when the labels diverged; the data do not show when the discount arose or how much
+of it the petition caused. A typical unflagged position is small
+relative to its fund (median 0.03\% of net assets; 90th percentile 0.35\%). The \$2.8 billion figure is
+reported exposure, not a loss or an overstatement of net asset value. The relevance is for users who
+treat the field as a status signal: a screen that counts defaulted holdings across funds or fund
+families, a monitor of distressed exposure built from N-PORT, or a research panel that uses the flag
+as a variable; a recent Federal Reserve note, for example, reports the share of defaulted holdings of
+interval and tender-offer funds from N-PORT \citep{george2026}. For such users a single fund's answer is not a reliable indicator of an issuer event,
+and agreement across holders or a check against issuer filings is needed. We do not claim investor
+harm.
+
+\paragraph{Loans.} The loan share is three to four times the bond share. With no SEC statement on
+whether loans belong in the item, the difference may reflect reporting scope as much as practice, and
+we leave it as an exploratory observation.
+
+\paragraph{Sample.} The study plan set a Stage~0 gate of at least 300 externally dated default events.
+Independent construction from 8-K evidence produced 60 confirmation cases, so the gate was not met.
+Proceeding with the 60 cases was a deviation from the plan, decided by the author and recorded in the
+protocol before it was frozen. Clustering by case accounts for dependence among holdings of the same
+issuer; the small number of cases limits precision, and the year-by-year estimates outside 2020 rest on
+few cases.
+
+%=====================================================================
+\section{Research record}\label{sec:record}
+
+\begin{enumerate}
+\item \textbf{Development.} The pipeline was built on cases observed in one quarterly data set (2025Q4):
+four cases and 265 holdings, of which 36\% were unflagged. These cases were seen before the protocol was
+frozen and are excluded from all estimates.
+\item \textbf{Frozen confirmation.} The protocol (primary question, sample, estimator, verdict rule) and
+the analysis code were hashed before the run. The single run on 60 cases (Figure~\ref{fig:stages}) gave 30.3\% (20.5\% to
+39.8\%). A separate re-implementation from the raw N-PORT files, given only the protocol and the case and
+security lists, reproduced every count exactly and confirmed ten randomly chosen petition dates.
+\item \textbf{Linkage errors found after the run.} The per-case output showed 225 holdings of Gates
+Global, an unrelated company, attached to the Frontier Communications case (some funds had labelled
+Gates bonds with Frontier's name, and the frozen rules then accepted Gates' CUSIP prefix), and notes of
+Ferrellgas, L.P., the operating partnership, attached to the petition of Ferrellgas Partners, L.P., which
+did not include it. Both errors raise the share.
+\item \textbf{Audit (post hoc).} Two amendments, hashed before any corrected number was computed, defined
+a security-level debtor audit. One model labeller classified all 89 issuer groups; a second, independent
+reviewer classified every security in the 37 groups holding 92\% of holdings and 97\% of value, and
+searched for each case's plan effective date. They disagreed on two securities, resolved from the cited
+documents. Securities of other companies (225 holdings), of non-filing affiliates (103) and with
+unresolved status (1) were removed, as were holdings reported after an identified effective date.
+\item \textbf{Loan review (post hoc).} All 33 loans were checked for debtor-in-possession and roll-up
+status from their titles and public documents before their answers were read. One, McDermott's
+superpriority term loan, was rolled into the DIP facility and is excluded (32 holdings).
+\item \textbf{Review additions (post hoc).} After an external review we added the same-security
+comparison across fund families (Table~\ref{tab:cross}), read the governing documents of the five
+largest cases (Table~\ref{tab:contracts}), and report bonds as the main estimate and loans as
+exploratory. After a second review we made the classes of Table~\ref{tab:cross} mutually exclusive
+(the first version listed overlapping rows), added the case-clustered interval and case count for the
+same-security comparison, chose the worked example in Figure~\ref{fig:cross}b by a stated rule, and
+added the source table for the contracts (Appendix Table~\ref{tab:sources}). None of these changes the
+sample or the estimator.
+\item \textbf{Reconciliation.} Applying the audit to the re-implementation's own holdings reproduces the
+final counts exactly (4,331 holdings, 1,079 unflagged, 57 cases). A separate rebuild of the
+same-security comparison, from the re-implementation's holdings and families taken directly from the raw
+N-CEN files without the analysis code or its output, reproduces every count in Table~\ref{tab:cross}.
+\end{enumerate}
+
+\begin{figure}[!htb]
+\centering
+\includegraphics{fig5_stages.pdf}
+\caption{Pooled share of holdings reported as not in default, by stage of the research record. The
+frozen run is the pre-registered confirmation; the later stages are post-hoc corrections of the linked
+securities.}
+\label{fig:stages}
+\end{figure}
+The frozen estimate remains part of the record. Because the linkage errors were found after the run,
+the audited estimates govern what we conclude, and they are post hoc rather than independently
+confirmed.
+
+%=====================================================================
+\section{Conclusion}
+
+Fund families holding the same bond on the same date give opposite answers to the N-PORT default
+question in nearly half of the bond-dates that more than one family holds, and about a fifth of bond
+holdings of bankrupt issuers are reported as not in default at the first report after the petition.
+Their reported prices agree. The disagreement occurs in a field for which the SEC permits different
+reporting methodologies; the data do not identify the specific reason for each disagreement. If the
+SEC wants N-PORT to carry a comparable signal of issuer distress, a separate, explicitly defined field
+for whether the issuer is in a pending bankruptcy case may serve better than redefining the
+security-level default item, whose contractual meaning can legitimately differ across instruments. The
+form should also say whether loans are covered. Until then, users should not read one fund's answer as
+evidence about the issuer.
+
+\paragraph{Use of AI.} Anthropic's Claude Opus 5.5 model was used to develop the analysis code;
+extract and analyse the public SEC data; classify debtor status and read contract terms and other
+public source documents; and generate the figures. The author wrote the first draft of the
+manuscript, selected the research question, approved the research
+protocol and its amendments, reviewed the evidence and conclusions, directed revisions, and accepts
+responsibility for the final manuscript.
+
+\clearpage
+\appendix
+\section*{Appendix A: contract sources}
+\setcounter{table}{0}\renewcommand{\thetable}{A\arabic{table}}
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Governing instruments behind Table~\ref{tab:contracts}. Accession numbers identify EDGAR filings; EoD: event-of-default
+clause; Acc.: acceleration clause. Loan CUSIPs are matched by borrower, agreement and tranche, since
+credit agreements do not print them. Links and the quoted clauses are in Appendix~B.}\label{tab:sources}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}X@{}}
+\toprule
+Instrument (held CUSIP) & Obligor & Filing (exhibit) & EoD; Acc. & Obligor a debtor (source) \\
+\midrule
+Frontier 8.000\% 1L notes 2027 (35906ABC1) & Frontier Communications Corp & 0001140361-19-005134 (EX-4.1) & \S7.01(vi); \S7.02(c), automatic & Yes, 14 Apr 2020 (petition 8-K 0001140361-20-008876) \\
+Frontier term B-1 loans (35906EAJ9) & Frontier Communications Corp & 0001193125-17-062225 (EX-10); joinder 0000020520-17-000018 (EX-10.1) & \S7.01(i); \S7.01, automatic & Yes, same source \\
+Intelsat 8.50\% notes 2024 (45824TBA2) & Intelsat Jackson Holdings S.A. & 0001193125-18-277618 (EX-99.2) & \S6.01(e); \S6.02(b), automatic & Yes, 13 May 2020 (DIP agreement, 8-K 0001193125-20-171951) \\
+Intelsat term loans, 2011 agreement (L5137LAF2) & Intelsat Jackson Holdings S.A. & 0001193125-14-060573 (EX-4.7, 2013 conformed text) & \S12.5; \S12, automatic & Yes, same source \\
+Chesapeake 11.5\% 2L notes 2025 (165167DD6) & Chesapeake Energy Corp & 0001104659-19-076135 (EX-4.1) & \S6.01(6); \S6.02, automatic & Yes, 28 Jun 2020 (petition 8-K 0001104659-20-077745) \\
+Chesapeake FLLO term loan (16516FAH2) & Chesapeake Energy Corp & 0001104659-19-076135 (EX-4.3) & \S10.5; \S10, automatic & Yes, same source \\
+Endo 6.125\% 1L notes 2029 (29280BAA3) & Endo Luxembourg Finance Co I and Endo U.S. Inc.; parent Endo International plc & 0001193125-21-094652 (EX-4.1) & \S6.01(a)(7); \S6.02, automatic on a parent filing & Parent yes, 16 Aug 2022 (petition 8-K 0001193125-22-222687); Endo U.S. yes (plan, 0001193125-24-000733); Lux.\ Finance I not named on EDGAR \\
+Endo 2021 term loans (L2968EAE2) & Endo Luxembourg Finance Co I; parent Endo International plc & 0001193125-21-094652 (EX-10.1) & \S7.01(i); \S7.01, automatic for parent or borrower & Parent yes, as above \\
+Par Pharmaceutical 7.500\% 1L notes 2027 (69888XAA7) & Par Pharmaceutical, Inc.; parent Endo International plc & 0001193125-19-090665 (EX-4.1) & \S6.01(7); \S6.02, automatic on a parent filing & Yes (plan \S1.1.589, 0001193125-24-075864) \\
+Whiting 6.625\% notes 2026 (966387BG6) & Whiting Petroleum Corp & 0001193125-17-380119 (EX-4.2) & \S6.01(9); \S6.02, automatic & Yes, 1 Apr 2020 (petition 8-K 0001193125-20-093737) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section*{Appendix B: quoted clauses}
+All links are to the SEC's EDGAR archive and were opened on 29 October 2026. ``EoD'' quotes the
+bankruptcy event of default and ``Acc.'' the acceleration clause.
+
+{\footnotesize
+\begin{description}[leftmargin=0pt,itemsep=3pt]
+\item[Frontier 8.000\% first-lien notes due 2027.] \url{https://www.sec.gov/Archives/edgar/data/20520/000114036119005134/s002637x3_ex4-1.htm}.
+EoD \S7.01(vi): ``the Company shall commence a voluntary case under any applicable bankruptcy, insolvency or
+other similar law''. Acc.\ \S7.02(c): ``If an Event of Default described in Section 7.01(vi) occurs and is
+continuing, then the principal amount of all the Outstanding Notes, and the interest accrued thereon, if any,
+shall become and be immediately due and payable without any declaration or other act on the part of the
+Trustee or any Holder.''
+\item[Frontier term B-1 loans.] Credit agreement \url{https://www.sec.gov/Archives/edgar/data/20520/000119312517062225/d356289dex10.htm};
+increase joinder adding the B-1 tranche \url{https://www.sec.gov/Archives/edgar/data/20520/000002052017000018/ftr-20170630xex10_1.htm}.
+EoD \S7.01(i): ``the Borrower or any of its Principal Subsidiaries shall (i) voluntarily commence any proceeding
+or file any petition seeking liquidation, reorganization or other relief under any Federal or state
+bankruptcy, insolvency, receivership or similar law''. Acc.: ``in case of any event with respect to the
+Borrower described in clause (h) or (i) of this Section 7.01, the Commitments shall automatically terminate and
+the principal of the Loans then outstanding \ldots{} shall automatically become due and payable''.
+\item[Intelsat Jackson 8.50\% notes due 2024.] \url{https://www.sec.gov/Archives/edgar/data/1525773/000119312518277618/d627436dex992.htm}.
+EoD \S6.01(e): ``the Issuer or any Significant Subsidiary pursuant to or within the meaning of any Bankruptcy
+Law: (i) commences a voluntary case''. Acc.\ \S6.02(b): ``in the case of an Event of Default arising under
+Section 6.01(e) or (f), all outstanding Notes will become due and payable without further action or notice.''
+\item[Intelsat Jackson term loans (2011 agreement, 2013 conformed text).] \url{https://www.sec.gov/Archives/edgar/data/1525773/000119312514060573/d597626dex47.htm}.
+EoD \S12.5: ``The Borrower or any Specified Subsidiary shall commence a voluntary case, proceeding or action
+concerning itself under (a) Title 11 of the United States Code''. Acc., \S12: ``if an Event of Default
+specified in Section 12.5 shall occur with respect to the Borrower or any Specified Subsidiary, the result
+that would occur upon the giving of written notice by the Administrative Agent \ldots{} shall occur
+automatically''. Debtor status: DIP agreement naming ``Intelsat Jackson Holdings S.A., as a Debtor and Debtor
+in Possession'', \url{https://www.sec.gov/Archives/edgar/data/1525773/000119312520171951/d927580dex101.htm}.
+\item[Chesapeake 11.5\% second-lien notes due 2025.] \url{https://www.sec.gov/Archives/edgar/data/895126/000110465919076135/tm1926440d1_ex4-1.htm}.
+EoD \S6.01(6): ``any Obligor pursuant to or within the meaning of any Bankruptcy Law: (A) commences a voluntary
+case or proceeding''. Acc.\ \S6.02: ``If an Event of Default specified in clauses (6) or (7) of Section 6.01
+above occurs, all unpaid principal \ldots{} will become due and payable, without any declaration or other act
+on the part of the Trustee or any Holder.''
+\item[Chesapeake FLLO term loan.] \url{https://www.sec.gov/Archives/edgar/data/895126/000110465919076135/tm1926440d1_ex4-3.htm}.
+EoD \S10.5: ``The Borrower or any Specified Subsidiary shall commence a voluntary case, proceeding or action
+concerning itself under (a) Title 11''. Acc.: ``if an Event of Default specified in Section 10.5 shall occur
+with respect to the Borrower, clauses (x) and (y) below shall occur automatically'', clause (y) making the
+Loans ``forthwith due and payable''.
+\item[Endo 6.125\% notes due 2029.] \url{https://www.sec.gov/Archives/edgar/data/1593034/000119312521094652/d120772dex41.htm}.
+EoD \S6.01(a)(7): ``the Parent, the Issuers or any Significant Subsidiary: (a) commences a voluntary insolvency
+proceeding''. Acc.\ \S6.02: ``If an Event of Default specified in Sections 6.01(a)(7) and 6.01(a)(8) hereof
+with respect to the Parent shall occur, such amounts with respect to all the Notes shall become automatically
+due and payable immediately without any declaration or further action or notice''.
+\item[Endo 2021 term loans.] \url{https://www.sec.gov/Archives/edgar/data/1593034/000119312521094652/d120772dex101.htm}.
+EoD \S7.01(i): ``Parent or any Material Subsidiary shall (i) voluntarily commence any proceeding or file any
+petition seeking \ldots{} relief under any Federal, state or foreign bankruptcy \ldots{} law''. Acc.: ``in case of
+any event with respect to Parent or any Borrower described in clause (h) or (i) of this Section 7.01, \ldots{}
+the principal of the Loans then outstanding \ldots{} shall automatically become due and payable''.
+\item[Par Pharmaceutical 7.500\% notes due 2027.] \url{https://www.sec.gov/Archives/edgar/data/1593034/000119312519090665/d694160dex41.htm}.
+EoD \S6.01(7): ``the Parent, the Issuer or any Significant Subsidiary: (a) commences a voluntary insolvency
+proceeding''. Acc.\ \S6.02: ``If an Event of Default specified in Sections 6.01(7) and 6.01(8) hereof with
+respect to the Parent shall occur, such amounts with respect to all the Notes shall become automatically due
+and payable immediately''; otherwise acceleration requires a declaration by the trustee or 25\% of holders.
+Debtor status: plan \S1.1.589, \url{https://www.sec.gov/Archives/edgar/data/1593034/000119312524075864/d813107dex21.htm}.
+Endo's 8-K of 19 August 2022 lists the 2021 credit agreement and both note issues as accelerated by the
+filing: \url{https://www.sec.gov/Archives/edgar/data/1593034/000119312522225297/d389791d8k.htm}.
+\item[Whiting 6.625\% notes due 2026.] \url{https://www.sec.gov/Archives/edgar/data/1255474/000119312517380119/d505619dex42.htm}.
+EoD \S6.01(9): ``the Company, any Significant Subsidiary of the Company or any group of Subsidiaries \ldots{}
+(a) commences a voluntary case''. Acc.\ \S6.02: ``if an Event of Default specified in clause (9) or (10) of
+Section 6.01 hereof occurs with respect to the Company \ldots{} all outstanding Notes shall become due and
+payable without further action or notice''.
+\item[Counterexample: Valley National 6.25\% subordinated notes due 2032.] \url{https://www.sec.gov/Archives/edgar/data/714310/000119312522247735/d405024dex42.htm}.
+EoD \S5.1(b): ``the Company or a Principal Subsidiary Bank shall commence a voluntary case under any applicable
+bankruptcy, insolvency or other similar law''. Acc.\ \S5.2: ``the Trustee or the Holders of not less than
+25\% in aggregate principal amount of the Outstanding Notes may declare the principal of all the Notes to be
+due and payable immediately''.
+\item[Petition 8-Ks.] Frontier \url{https://www.sec.gov/Archives/edgar/data/20520/000114036120008876/form8k.htm};
+Intelsat \url{https://www.sec.gov/Archives/edgar/data/1525773/000119312520142170/d932199d8k.htm};
+Chesapeake \url{https://www.sec.gov/Archives/edgar/data/895126/000110465920077745/tm2023599-1_8k.htm};
+Endo \url{https://www.sec.gov/Archives/edgar/data/1593034/000119312522222687/d394120d8k.htm};
+Whiting \url{https://www.sec.gov/Archives/edgar/data/1255474/000119312520093737/d899645d8k.htm}.
+\end{description}
+}
+
+\bibliographystyle{plainnat}
+\begin{thebibliography}{99}
+\bibitem[Cavani et~al.(2025)Cavani, Maggiori, and Schreger]{cavani2025}
+Cavani, F., M.~Maggiori, and J.~Schreger (2025). GCAP: Public security-level data on U.S.\ fund
+holdings. NBER Working Paper 34494. \url{https://www.nber.org/papers/w34494}.
+\bibitem[Cici et~al.(2011)Cici, Gibson, and Merrick]{cici2011}
+Cici, G., S.~Gibson, and J.~J. Merrick~Jr. (2011). Missing the marks? Dispersion in corporate bond
+valuations across mutual funds. \emph{Journal of Financial Economics} 101(1), 206-226.
+\doi{10.1016/j.jfineco.2011.02.001}.
+\bibitem[{Empirasign}(n.d.)]{empirasign}
+Empirasign (n.d.). Surfacing outliers: N-PORT valuation outliers report.
+\url{https://www.empirasign.com/blog/Surfacing-Outliers/}.
+\bibitem[{ICE}(2026)]{ice_nport}
+ICE (2026). ICE Regulatory Solutions: Form N-PORT service.
+\url{https://www.ice.com/publicdocs/ICE_Regulatory_Solutions_Form_N_Port_Service.pdf}.
+\bibitem[Jacobson and Kowara(2021)]{morningstar2021}
+Jacobson, E., and M.~Kowara (2021). Bond pricing: Agreeing to disagree. Morningstar research paper.
+\url{https://www.morningstar.com/content/dam/marketing/shared/research/foundational/Bond_Pricing_2021.pdf}.
+\bibitem[Manoel(2026)]{manoel2026}
+Manoel, P. (2026). Connections and creditor outcomes in Chapter 11. SSRN Working Paper 6226282.
+\url{https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6226282}.
+\bibitem[George and Shin(2026)]{george2026}
+George, L., and C.~Shin (2026). The rise of semiliquid funds for retail investors. FEDS Notes, Board of
+Governors of the Federal Reserve System, 14 October 2026.
+\url{https://www.federalreserve.gov/econres/notes/feds-notes/the-rise-of-semiliquid-funds-for-retail-investors-20261014.html}.
+\bibitem[{SEC}(2016)]{sec_2016_release}
+SEC (2016). Investment Company Reporting Modernization, Release Nos.\ 33-10231, IC-32314 (13 October
+2016). \url{https://www.sec.gov/files/rules/final/2016/33-10231.pdf}.
+\bibitem[{SEC}(2026)]{sec_2026_proposal}
+SEC (2026). Form N-PORT reporting, proposed rule, Release No.\ IC-35962, 91 Fed.\ Reg.\ 8582 (23 February
+2026), at 8595. \url{https://www.govinfo.gov/content/pkg/FR-2026-02-23/pdf/2026-03460.pdf}.
+\bibitem[{SEC}(2020)]{corr_gs2020}
+SEC (2020). Goldman Sachs Trust, correspondence, 28 August 2020.
+\url{https://www.sec.gov/Archives/edgar/data/822977/000119312520234964/filename1.htm}.
+\bibitem[{SEC}(2021)]{corr_rivernorth2022}
+SEC (2021). RiverNorth Specialty Finance Corp., correspondence, 13 October 2021 (released on EDGAR 11 October 2022).
+\url{https://www.sec.gov/Archives/edgar/data/1644771/000139834422020015/filename1.htm}.
+\bibitem[{SEC}(n.d.a)]{sec_nport_form}
+SEC (n.d.a). Form N-PORT, general instructions and Part C. \url{https://www.sec.gov/files/formn-port.pdf}.
+\bibitem[{SEC}(n.d.b)]{sec_nport_data}
+SEC (n.d.b). Form N-PORT data sets.
+\url{https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets}.
+\bibitem[{US Code}(n.d.)]{usc362}
+11 U.S.C.~\S362, Automatic stay. \url{https://www.law.cornell.edu/uscode/text/11/362}.
+\bibitem[{US Courts}(n.d.)]{uscourts_ch11}
+United States Courts (n.d.). Chapter 11: Bankruptcy basics.
+\url{https://www.uscourts.gov/court-programs/bankruptcy/bankruptcy-basics/chapter-11-bankruptcy-basics}.
+\bibitem[{Valley National Bancorp}(2022)]{valley2022}
+Valley National Bancorp (2022). Second supplemental indenture, 6.25\% fixed-to-floating rate subordinated
+notes due 2032, Form 8-K Exhibit 4.2, Sections 5.1 and 5.2.
+\url{https://www.sec.gov/Archives/edgar/data/714310/000119312522247735/d405024dex42.htm}.
+\end{thebibliography}
+
+\end{document}
